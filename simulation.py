@@ -35,6 +35,9 @@ CAR_TANK_LEVEL = [5, 25]   # Min/max levels of car fuel tanks (liters)
 REFUELING_SPEED = 2        # Rate of refuelling car fuel tank (liters / second)
 T_INTER = 30               # Interval between car arrivals (seconds)
 SIM_TIME = 1000            # Simulation time (seconds)
+LAMBDA_PARAM = 0.3250380904012189
+SERVICE_TIME_MEAN = 3.4838383838383837
+SERVICE_TIME_VARIANCE = pow(1.8803184272940663,2)
 # fmt: on
 
 REMAINING_FUEL = STATION_TANK_SIZE
@@ -81,14 +84,25 @@ class Car(object):
                 if ((REMAINING_FUEL - fuel_required) / STATION_TANK_SIZE) * 100 > THRESHOLD:
 
                     REMAINING_FUEL -= fuel_required
-                    yield env.timeout(fuel_required/REFUELING_SPEED)
+                    service_time = random.normalvariate(SERVICE_TIME_MEAN, SERVICE_TIME_VARIANCE)
+
+                    while service_time < 0:
+                        service_time = random.normalvariate(SERVICE_TIME_MEAN, SERVICE_TIME_VARIANCE)
+
+                    yield env.timeout(service_time)
                     print(f'{self.env.now:6.1f} s: {self.name} refueled with {fuel_required:.1f}L')
 
                 else: 
 
                     fuel_required = REMAINING_FUEL - STATION_TANK_SIZE * (THRESHOLD/100)
                     REMAINING_FUEL -= fuel_required
-                    yield env.timeout(fuel_required/REFUELING_SPEED)
+
+                    service_time = random.normalvariate(SERVICE_TIME_MEAN, SERVICE_TIME_VARIANCE)
+
+                    while service_time < 0:
+                        service_time = random.normalvariate(SERVICE_TIME_MEAN, SERVICE_TIME_VARIANCE)
+
+                    yield env.timeout(service_time)
                     print(f'{self.env.now:6.1f} s: {self.name} refueled only with {fuel_required:.1f}L before the fuel ran out')
                 
                 self.stats.leave_system(self.env.now)
@@ -104,7 +118,7 @@ class Car(object):
 def car_generator(env, gas_station, stats):
     """Generate new cars that arrive at the gas station."""
     for i in itertools.count():
-        yield env.timeout(random.expovariate(1.0 / T_INTER))
+        yield env.timeout(random.expovariate(LAMBDA_PARAM))
         c = Car(env, stats, f'Car {i}', gas_station)
 
 # Setup and start the simulation
