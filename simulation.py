@@ -32,9 +32,7 @@ STATION_TANK_SIZE = 72000   # Size of the gas station tank (liters)
 THRESHOLD = 20             # Station tank minimum level (% of full)
 CAR_TANK_SIZE = 50         # Size of car fuel tanks (liters)
 CAR_TANK_LEVEL = [5, 25]   # Min/max levels of car fuel tanks (liters)
-REFUELING_SPEED = 2        # Rate of refuelling car fuel tank (liters / second)
-T_INTER = 30               # Interval between car arrivals (seconds)
-SIM_TIME = 1000            # Simulation time (seconds)
+SIM_TIME = 1440            # Simulation time (minutes)
 LAMBDA_PARAM = 0.3250380904012189
 SERVICE_TIME_MEAN = 3.4838383838383837
 SERVICE_TIME_VARIANCE = pow(1.8803184272940663,2)
@@ -69,7 +67,7 @@ class Car(object):
         self.arrival_time = self.env.now
         self.stats.add_new_client(self.arrival_time)
         car_tank_level = random.randint(*CAR_TANK_LEVEL)
-        print(f'{self.env.now:6.1f} s: {self.name} arrived at gas station')
+        print(f'{self.env.now:6.1f} m: {self.name} arrived at gas station')
         with gas_pump.request() as req:
             # Request one of the gas pumps
             yield req
@@ -90,7 +88,7 @@ class Car(object):
                         service_time = random.normalvariate(SERVICE_TIME_MEAN, SERVICE_TIME_VARIANCE)
 
                     yield env.timeout(service_time)
-                    print(f'{self.env.now:6.1f} s: {self.name} refueled with {fuel_required:.1f}L')
+                    print(f'{self.env.now:6.1f} m: {self.name} refueled with {fuel_required:.1f}L')
 
                 else: 
 
@@ -103,7 +101,7 @@ class Car(object):
                         service_time = random.normalvariate(SERVICE_TIME_MEAN, SERVICE_TIME_VARIANCE)
 
                     yield env.timeout(service_time)
-                    print(f'{self.env.now:6.1f} s: {self.name} refueled only with {fuel_required:.1f}L before the fuel ran out')
+                    print(f'{self.env.now:6.1f} m: {self.name} refueled only with {fuel_required:.1f}L before the fuel ran out')
                 
                 self.stats.leave_system(self.env.now)
                 self.stats.add_time_on_system(self.env.now - self.arrival_time)
@@ -142,11 +140,11 @@ env.run(until=main_event)
 
 if not_fuel_remaining.triggered:
 
-    print('\nSimulation results after {:.1f} seconds (Not remaining fuel):'.format(env.now))
+    print('\nSimulation results after {:.1f} minutes (Not remaining fuel):'.format(env.now))
 
 else: 
 
-    print('\nSimulation results after {:.1f} seconds:'.format(SIM_TIME))
+    print('\nSimulation results after {:.1f} minutes:'.format(SIM_TIME))
 
 # Print statistics
 
