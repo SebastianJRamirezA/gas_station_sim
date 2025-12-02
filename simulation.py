@@ -27,9 +27,9 @@ from stats import ClientStatsAccumulator
 
 # fmt: off
 RANDOM_SEED = 42
-GAS_PUMP_NUM = 4
-STATION_TANK_SIZE = 500   # Size of the gas station tank (liters)
-THRESHOLD = 25             # Station tank minimum level (% of full)
+NUM_PUMPS = 4
+STATION_TANK_SIZE = 72000   # Size of the gas station tank (liters)
+THRESHOLD = 20             # Station tank minimum level (% of full)
 CAR_TANK_SIZE = 50         # Size of car fuel tanks (liters)
 CAR_TANK_LEVEL = [5, 25]   # Min/max levels of car fuel tanks (liters)
 REFUELING_SPEED = 2        # Rate of refuelling car fuel tank (liters / second)
@@ -115,7 +115,7 @@ stats = ClientStatsAccumulator()
 
 # Create environment and start processes
 env = simpy.Environment()
-gas_station = [simpy.Resource(env, capacity=1) for _ in range(GAS_PUMP_NUM)]
+gas_station = [simpy.Resource(env, capacity=1) for _ in range(NUM_PUMPS)]
 env.process(car_generator(env, gas_station, stats))
 
 gas_station_close_event = env.timeout(SIM_TIME)
