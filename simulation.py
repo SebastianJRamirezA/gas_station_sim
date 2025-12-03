@@ -28,12 +28,13 @@ RANDOM_SEED = 42
 NUM_PUMPS = 4
 STATION_TANK_SIZE = 72000   # Size of the gas station tank (liters)
 THRESHOLD = 20             # Station tank minimum level (% of full)
-CAR_TANK_SIZE = 50         # Size of car fuel tanks (liters)
-CAR_TANK_LEVEL = [5, 25]   # Min/max levels of car fuel tanks (liters)
+CAR_TANK_LIMITS = [9, 140]   # Min/max levels of car fuel tanks (liters)
 SIM_TIME = 1440            # Simulation time (minutes)
 LAMBDA_PARAM = 0.3250380904012189
 SERVICE_TIME_MEAN = 3.4838383838383837
 SERVICE_TIME_VARIANCE = pow(1.8803184272940663,2)
+CAR_TANK_MEAN = 51.3421052631579
+CAR_TANK_VARIANCE = pow(29.185681705598356,2)
 # fmt: on
 
 REMAINING_FUEL = STATION_TANK_SIZE
@@ -73,7 +74,9 @@ class Car(object):
         self.stats.add_new_client(self.arrival_time)
         
         # Determine how much fuel this specific vehicle needs
-        car_tank_level = random.randint(*CAR_TANK_LEVEL)
+        fuel_required = random.normalvariate(CAR_TANK_MEAN, CAR_TANK_VARIANCE)
+        while fuel_required < CAR_TANK_LIMITS[0] or fuel_required > CAR_TANK_LIMITS[1]:
+            fuel_required = random.normalvariate(CAR_TANK_MEAN, CAR_TANK_VARIANCE)
         print(f'{self.env.now:6.1f} m: {self.name} arrived at gas station')
         with gas_pump.request() as req:
             # Wait until the pump is free (Service turn)
@@ -82,9 +85,6 @@ class Car(object):
             # 4. Inventory and Service Logic
             # Check if the central tank level is above the operational threshold
             if (REMAINING_FUEL / STATION_TANK_SIZE) * 100 > THRESHOLD: 
-
-                # Get the required amount of fuel
-                fuel_required = CAR_TANK_SIZE - car_tank_level
 
                 # Vehicle starts being served
                 self.stats.serve_client(self.env.now)
