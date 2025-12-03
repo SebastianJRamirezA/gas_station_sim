@@ -25,14 +25,15 @@ from stats import ClientStatsAccumulator
 
 # fmt: off
 RANDOM_SEED = 42
-NUM_PUMPS = 4               # Number of pumps (Resources)
-STATION_TANK_SIZE = 72000   # Total capacity of the station tank (Liters)
-THRESHOLD = 20              # Minimum operational threshold of the station tank (%)
-CAR_TANK_SIZE = 50          # Vehicle tank capacity (Liters)
-CAR_TANK_LEVEL = [5, 25]    # Initial fuel range in vehicle [min, max] (Liters)
-REFUELING_SPEED = 2        # Rate of refuelling car fuel tank (liters / second)
-T_INTER = 30               # Interval between car arrivals (seconds)
-SIM_TIME = 1000            # Simulation time (seconds)
+NUM_PUMPS = 4
+STATION_TANK_SIZE = 72000   # Size of the gas station tank (liters)
+THRESHOLD = 20             # Station tank minimum level (% of full)
+CAR_TANK_SIZE = 50         # Size of car fuel tanks (liters)
+CAR_TANK_LEVEL = [5, 25]   # Min/max levels of car fuel tanks (liters)
+SIM_TIME = 1440            # Simulation time (minutes)
+LAMBDA_PARAM = 0.3250380904012189
+SERVICE_TIME_MEAN = 3.4838383838383837
+SERVICE_TIME_VARIANCE = pow(1.8803184272940663,2)
 # fmt: on
 
 REMAINING_FUEL = STATION_TANK_SIZE
@@ -73,9 +74,7 @@ class Car(object):
         
         # Determine how much fuel this specific vehicle needs
         car_tank_level = random.randint(*CAR_TANK_LEVEL)
-        print(f'{self.env.now:6.1f} s: {self.name} arrived at gas station')
-        
-         # 3. Resource Request (Enter the chosen pump's queue)
+        print(f'{self.env.now:6.1f} m: {self.name} arrived at gas station')
         with gas_pump.request() as req:
             # Wait until the pump is free (Service turn)
             yield req
@@ -97,16 +96,27 @@ class Car(object):
                 if ((REMAINING_FUEL - fuel_required) / STATION_TANK_SIZE) * 100 > THRESHOLD:
 
                     REMAINING_FUEL -= fuel_required
-                    yield env.timeout(fuel_required/REFUELING_SPEED)
-                    print(f'{self.env.now:6.1f} s: {self.name} refueled with {fuel_required:.1f}L')
+                    service_time = random.normalvariate(SERVICE_TIME_MEAN, SERVICE_TIME_VARIANCE)
+
+                    while service_time < 0:
+                        service_time = random.normalvariate(SERVICE_TIME_MEAN, SERVICE_TIME_VARIANCE)
+
+                    yield env.timeout(service_time)
+                    print(f'{self.env.now:6.1f} m: {self.name} refueled with {fuel_required:.1f}L')
 
                 else: 
                     # If there isn't enough to fill completely without breaching the threshold,
                     # provide only what is available down to the threshold.
                     fuel_required = REMAINING_FUEL - STATION_TANK_SIZE * (THRESHOLD/100)
                     REMAINING_FUEL -= fuel_required
-                    yield env.timeout(fuel_required/REFUELING_SPEED)
-                    print(f'{self.env.now:6.1f} s: {self.name} refueled only with {fuel_required:.1f}L before the fuel ran out')
+
+                    service_time = random.normalvariate(SERVICE_TIME_MEAN, SERVICE_TIME_VARIANCE)
+
+                    while service_time < 0:
+                        service_time = random.normalvariate(SERVICE_TIME_MEAN, SERVICE_TIME_VARIANCE)
+
+                    yield env.timeout(service_time)
+                    print(f'{self.env.now:6.1f} m: {self.name} refueled only with {fuel_required:.1f}L before the fuel ran out')
                 
                 # 5. Departure from System
                 self.stats.leave_system(self.env.now)
@@ -126,8 +136,7 @@ def car_generator(env, gas_station, stats):
     """
     for i in itertools.count():
         # Wait for a random exponential time before generating the next vehicle
-        yield env.timeout(random.expovariate(1.0 / T_INTER))
-        # Create the vehicle instance
+        yield env.timeout(random.expovariate(LAMBDA_PARAM))
         c = Car(env, stats, f'Car {i}', gas_station)
 
 print('--- Starting Gas Station Simulation (10 Replications) ---')
