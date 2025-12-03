@@ -30,9 +30,10 @@ STATION_TANK_SIZE = 72000   # Size of the gas station tank (liters)
 THRESHOLD = 20             # Station tank minimum level (% of full)
 CAR_TANK_LIMITS = [9, 140]   # Min/max levels of car fuel tanks (liters)
 SIM_TIME = 1440            # Simulation time (minutes)
-LAMBDA_PARAM = 0.3250380904012189
-SERVICE_TIME_MEAN = 3.4838383838383837
-SERVICE_TIME_VARIANCE = pow(1.8803184272940663,2)
+LAMBDA_PARAM = 0.34103019538188273
+SERVICE_TIME_MEAN = 4.3096774193548395
+SERVICE_TIME_VARIANCE = pow(2.926779011099522,2)
+SERVICE_TIME = [3, 15]
 CAR_TANK_MEAN = 51.3421052631579
 CAR_TANK_VARIANCE = pow(29.185681705598356,2)
 # fmt: on
@@ -96,6 +97,7 @@ class Car(object):
                 if ((REMAINING_FUEL - fuel_required) / STATION_TANK_SIZE) * 100 > THRESHOLD:
 
                     REMAINING_FUEL -= fuel_required
+                    # service_time = random.randint(SERVICE_TIME[0], SERVICE_TIME[1])
                     service_time = random.normalvariate(SERVICE_TIME_MEAN, SERVICE_TIME_VARIANCE)
 
                     while service_time < 0:
