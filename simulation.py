@@ -30,10 +30,9 @@ STATION_TANK_SIZE = 72000   # Size of the gas station tank (liters)
 THRESHOLD = 20             # Station tank minimum level (% of full)
 CAR_TANK_LIMITS = [9, 140]   # Min/max levels of car fuel tanks (liters)
 SIM_TIME = 1440            # Simulation time (minutes)
-LAMBDA_PARAM = 0.34103019538188273
+LAMBDA_PARAM = 0.4364009754845333
 SERVICE_TIME_MEAN = 4.3096774193548395
 SERVICE_TIME_VARIANCE = pow(2.926779011099522,2)
-SERVICE_TIME = [3, 15]
 CAR_TANK_MEAN = 51.3421052631579
 CAR_TANK_VARIANCE = pow(29.185681705598356,2)
 # fmt: on
